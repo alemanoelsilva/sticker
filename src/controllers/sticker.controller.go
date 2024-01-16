@@ -3,7 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"net/http"
-	"sticker/src/database"
+	"sticker/src/config/database"
 	"sticker/src/entities"
 )
 

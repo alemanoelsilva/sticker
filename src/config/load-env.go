@@ -1,4 +1,4 @@
-package main
+package config
 
 import (
 	"log"
@@ -6,17 +6,17 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Config struct {
+type EnvConfig struct {
 	Port             string `mapstructure:"port"`
 	ConnectionString string `mapstructure:"connection_string"`
 }
 
-var AppConfig *Config
+var AppConfig *EnvConfig
 
 func LoadAppConfig() {
 	log.Println("Loading Server Configurations...")
-	viper.AddConfigPath(".")
 	viper.SetConfigName("config")
+	viper.AddConfigPath(".")
 	viper.SetConfigType("json")
 	err := viper.ReadInConfig()
 	if err != nil {
