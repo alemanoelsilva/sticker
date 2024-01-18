@@ -13,6 +13,6 @@ func RegisterStickerRoutes() {
 	Router.HandleFunc("/api/stickers", controllers.GetStickers).Methods("GET")
 	Router.HandleFunc("/api/stickers/{id}", controllers.GetStickerById).Methods("GET")
 	Router.HandleFunc("/api/stickers", controllers.CreateSticker).Methods("POST")
-	// Router.HandleFunc("/api/stickers/{id}", controllers.UpdateSticker).Methods("PUT")
-	// Router.HandleFunc("/api/stickers/{id}", controllers.DeleteSticker).Methods("DELETE")
+	Router.HandleFunc("/api/stickers/{id}", controllers.UpdateSticker).Methods("PUT")
+	Router.HandleFunc("/api/stickers/{id}", controllers.DeleteStickerById).Methods("DELETE")
 }
