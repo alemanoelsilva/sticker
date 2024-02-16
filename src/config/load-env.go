@@ -1,29 +1,37 @@
 package config
 
 import (
+	"fmt"
 	"log"
-
-	"github.com/spf13/viper"
+	"os"
+	"strconv"
 )
 
 type EnvConfig struct {
-	Port             string `mapstructure:"port"`
-	ConnectionString string `mapstructure:"connection_string"`
+	Port             int
+	ConnectionString string
+	SecretToken      string
 }
 
 var AppConfig *EnvConfig
 
 func LoadAppConfig() {
 	log.Println("Loading Server Configurations...")
-	viper.SetConfigName("config")
-	viper.AddConfigPath(".")
-	viper.SetConfigType("json")
-	err := viper.ReadInConfig()
+
+	envPort := os.Getenv("PORT")
+	envDBString := os.Getenv("DB_STRING")
+	envJwtToken := os.Getenv("JWT_TOKEN")
+
+	portInt, err := strconv.Atoi(envPort)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("%v\n", err)
+		log.Fatalf("Error setting up the Application Port %v\n", envPort)
 	}
-	err = viper.Unmarshal(&AppConfig)
-	if err != nil {
-		log.Fatal(err)
+
+	AppConfig = &EnvConfig{
+		Port:             portInt,
+		ConnectionString: envDBString,
+		SecretToken:      envJwtToken,
 	}
+
 }

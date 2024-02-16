@@ -1,0 +1,41 @@
+version: "3"
+
+networks:
+  sticker-network:
+    driver: bridge
+
+services:
+  db:
+    image: mysql:latest
+    container_name: sticker-mysql-comp
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+    ports:
+      - 3306:3306
+    volumes:
+      - ./db:/var/lib/mysql
+    networks:
+      - sticker-network
+
+  sticker-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sticker-api-comp
+    restart: always
+    ports:
+      - 4000:4000
+    environment:
+      PORT: ${PORT}
+      DB_STRING: ${DB_STRING}
+      JWT_TOKEN: ${JWT_TOKEN}
+    depends_on:
+      - db
+    links:
+      - db
+    networks:
+      - sticker-network
