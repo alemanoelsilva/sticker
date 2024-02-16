@@ -1,13 +1,23 @@
-# sticker
+# Sticker
 
 A Go lang backend application to make commitments and stick to it.
 
-The basic configuration is to create a `config.json` file with two properties
-- connection_string: a connection mysql string as `user:pas@tcp(127.0.0.1:3306)/db`
-- port: application HTTP port
+## Basic Configuration
 
-To run locally
+Create a `.env` file with
 
-```
-go build . && go run .
-```
+- DB_STRING: a connection mysql string as `user:pas@tcp(127.0.0.1:3306)/db`
+- PORT: application HTTP port
+- JWT_TOKEN: jwt token
+- MYSQL_ROOT_PASSWORD: db root password
+- MYSQL_DATABASE: database name
+- MYSQL_USER: user name
+- MYSQL_PASSWORD: user password
+
+## Running
+
+To run locally run `docker-compose up --build`
+
+## Testing
+
+[TODO]
