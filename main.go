@@ -25,6 +25,7 @@ func main() {
 	// Register Routes
 	routes.RegisterStickerRoutes(Router)
 	routes.RegisterSignupRoutes(Router)
+	routes.RegisterHealthCheckRoutes(Router)
 
 	// Start the server
 	log.Println(fmt.Sprintf("Starting Server on port %d", config.AppConfig.Port))
