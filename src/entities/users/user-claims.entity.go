@@ -1,4 +1,4 @@
-package entities
+package users_entity
 
 import "github.com/golang-jwt/jwt"
 

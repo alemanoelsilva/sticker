@@ -1,6 +1,8 @@
-package entities
+package users_entity
 
 type User struct {
+	ID       uint   `json:"id"`
+	Name     string `json:"name"`
 	Email    string `json:"email"`
 	Password string `json:"password"`
 }

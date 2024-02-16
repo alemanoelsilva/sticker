@@ -1,4 +1,4 @@
-package entities
+package stickers_entity
 
 // EnumCategory represents the category enumeration.
 type CategoryType string

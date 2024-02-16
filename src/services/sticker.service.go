@@ -3,17 +3,17 @@ package services
 import (
 	"errors"
 	"sticker/src/config/database"
-	"sticker/src/entities"
+	stickers_entity "sticker/src/entities/stickers"
 )
 
-func GetStickers() []entities.Sticker {
-	var stickers []entities.Sticker
+func GetStickers() []stickers_entity.Sticker {
+	var stickers []stickers_entity.Sticker
 	database.Instance.Find(&stickers)
 	return stickers
 }
 
-func GetStickerById(stickerId string) (entities.Sticker, error) {
-	var sticker entities.Sticker
+func GetStickerById(stickerId string) (stickers_entity.Sticker, error) {
+	var sticker stickers_entity.Sticker
 	database.Instance.First(&sticker, stickerId)
 
 	if sticker.ID == 0 {
@@ -23,12 +23,12 @@ func GetStickerById(stickerId string) (entities.Sticker, error) {
 	return sticker, nil
 }
 
-func CreateSticker(sticker *entities.Sticker) {
+func CreateSticker(sticker *stickers_entity.Sticker) {
 	database.Instance.Create(&sticker)
 }
 
-func UpdateSticker(stickerId int, sticker *entities.Sticker) (entities.Sticker, error) {
-	var stickerOnDB entities.Sticker
+func UpdateSticker(stickerId int, sticker *stickers_entity.Sticker) (stickers_entity.Sticker, error) {
+	var stickerOnDB stickers_entity.Sticker
 	database.Instance.First(&stickerOnDB, stickerId)
 
 	if stickerOnDB.ID == 0 {
@@ -40,7 +40,7 @@ func UpdateSticker(stickerId int, sticker *entities.Sticker) (entities.Sticker, 
 
 	database.Instance.Save(&stickerToUpdate)
 
-	return entities.Sticker{
+	return stickers_entity.Sticker{
 		ID:             stickerToUpdate.ID,
 		Name:           stickerToUpdate.Name,
 		Description:    stickerToUpdate.Description,
@@ -50,8 +50,8 @@ func UpdateSticker(stickerId int, sticker *entities.Sticker) (entities.Sticker, 
 	}, nil
 }
 
-func DeleteStickerById(stickerId int) (entities.Sticker, error) {
-	var sticker entities.Sticker
+func DeleteStickerById(stickerId int) (stickers_entity.Sticker, error) {
+	var sticker stickers_entity.Sticker
 	database.Instance.First(&sticker, stickerId)
 
 	if sticker.ID == 0 {

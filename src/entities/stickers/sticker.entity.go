@@ -1,4 +1,4 @@
-package entities
+package stickers_entity
 
 type Sticker struct {
 	ID             uint          `json:"id"`

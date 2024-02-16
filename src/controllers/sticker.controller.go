@@ -4,7 +4,8 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"sticker/src/entities"
+	stickers_entity "sticker/src/entities/stickers"
+	"sticker/src/middlewares"
 	"sticker/src/services"
 	"strconv"
 
@@ -28,8 +29,17 @@ func getIdFromPath(r *http.Request) (int, error) {
 
 func CreateSticker(w http.ResponseWriter, r *http.Request) {
 	setHttpHeaders(w)
+	auth := r.Header.Get("Authorization")
+	err := middlewares.IsAuthenticated(auth)
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Message: err.Error(),
+		})
+		return
+	}
 
-	var sticker entities.Sticker
+	var sticker stickers_entity.Sticker
 	json.NewDecoder(r.Body).Decode(&sticker)
 
 	services.CreateSticker(&sticker)
@@ -40,6 +50,14 @@ func CreateSticker(w http.ResponseWriter, r *http.Request) {
 
 func GetStickers(w http.ResponseWriter, r *http.Request) {
 	setHttpHeaders(w)
+	err := middlewares.IsAuthenticated(r.Header.Get("Authorization"))
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Message: err.Error(),
+		})
+		return
+	}
 
 	stickers := services.GetStickers()
 
@@ -49,6 +67,15 @@ func GetStickers(w http.ResponseWriter, r *http.Request) {
 
 func GetStickerById(w http.ResponseWriter, r *http.Request) {
 	setHttpHeaders(w)
+	err := middlewares.IsAuthenticated(r.Header.Get("Authorization"))
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Message: err.Error(),
+		})
+		return
+	}
+
 	stickerId := mux.Vars(r)["id"]
 
 	sticker, err := services.GetStickerById(stickerId)
@@ -64,6 +91,14 @@ func GetStickerById(w http.ResponseWriter, r *http.Request) {
 
 func UpdateSticker(w http.ResponseWriter, r *http.Request) {
 	setHttpHeaders(w)
+	err := middlewares.IsAuthenticated(r.Header.Get("Authorization"))
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Message: err.Error(),
+		})
+		return
+	}
 
 	stickerId, err := getIdFromPath(r)
 	if err != nil {
@@ -72,7 +107,7 @@ func UpdateSticker(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var sticker entities.Sticker
+	var sticker stickers_entity.Sticker
 	json.NewDecoder(r.Body).Decode(&sticker)
 
 	stickerUpdated, err := services.UpdateSticker(stickerId, &sticker)
@@ -88,6 +123,14 @@ func UpdateSticker(w http.ResponseWriter, r *http.Request) {
 
 func DeleteStickerById(w http.ResponseWriter, r *http.Request) {
 	setHttpHeaders(w)
+	err := middlewares.IsAuthenticated(r.Header.Get("Authorization"))
+	if err != nil {
+		w.WriteHeader(http.StatusForbidden)
+		json.NewEncoder(w).Encode(ErrorResponse{
+			Message: err.Error(),
+		})
+		return
+	}
 
 	stickerId, err := getIdFromPath(r)
 	if err != nil {

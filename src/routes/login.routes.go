@@ -8,4 +8,5 @@ import (
 
 func RegisterSignupRoutes(router *mux.Router) {
 	router.HandleFunc("/api/signup", controllers.Signup).Methods("POST")
+	router.HandleFunc("/api/signin", controllers.Signin).Methods("POST")
 }

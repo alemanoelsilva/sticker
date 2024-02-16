@@ -2,7 +2,9 @@ package database
 
 import (
 	"log"
-	"sticker/src/entities"
+	stickers_entity "sticker/src/entities/stickers"
+
+	users_entity "sticker/src/entities/users"
 
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
@@ -22,6 +24,6 @@ func Connect(connectionString string) {
 }
 
 func Migrate() {
-	Instance.AutoMigrate(&entities.Sticker{})
+	Instance.AutoMigrate(&stickers_entity.Sticker{}, &users_entity.User{})
 	log.Println("Database Migration Completed...")
 }
