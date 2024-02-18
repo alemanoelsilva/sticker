@@ -33,6 +33,7 @@ services:
       PORT: ${PORT}
       DB_STRING: ${DB_STRING}
       JWT_TOKEN: ${JWT_TOKEN}
+      MIGRATION_PATH: ${MIGRATION_PATH}
     depends_on:
       - db
     links:

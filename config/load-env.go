@@ -1,37 +1,33 @@
 package config
 
 import (
-	"fmt"
-	"log"
 	"os"
-	"strconv"
+
+	"github.com/rs/zerolog"
 )
 
 type EnvConfig struct {
-	Port             int
+	Port             string
 	ConnectionString string
 	SecretToken      string
+	MigrationPath    string
 }
 
 var AppConfig *EnvConfig
 
-func LoadAppConfig() {
-	log.Println("Loading Server Configurations...")
+func LoadAppConfig(logger *zerolog.Logger) {
+	logger.Info().Msg("Loading Server Configurations...")
 
 	envPort := os.Getenv("PORT")
 	envDBString := os.Getenv("DB_STRING")
 	envJwtToken := os.Getenv("JWT_TOKEN")
-
-	portInt, err := strconv.Atoi(envPort)
-	if err != nil {
-		fmt.Printf("%v\n", err)
-		log.Fatalf("Error setting up the Application Port %v\n", envPort)
-	}
+	envMigrationPath := os.Getenv("MIGRATION_PATH")
 
 	AppConfig = &EnvConfig{
-		Port:             portInt,
+		Port:             envPort,
 		ConnectionString: envDBString,
 		SecretToken:      envJwtToken,
+		MigrationPath:    envMigrationPath,
 	}
 
 }
