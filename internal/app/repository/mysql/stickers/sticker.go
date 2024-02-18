@@ -31,20 +31,20 @@ func (s *SqlRepository) AddSticker(details entity.Sticker, userId int) (err erro
 	return err
 }
 
-func (s *SqlRepository) UpdateStickerById(id int, details entity.Sticker) (err error) {
-	sticker := model.Sticker{
-		ID:             details.ID,
-		Name:           details.Name,
-		Description:    details.Description,
-		Category:       string(details.Category),
-		Frequency:      string(details.Frequency),
-		Status:         string(details.Status),
-		IsPublic:       details.IsPublic,
-		IsAutoApproval: details.IsAutoApproval,
+func (s *SqlRepository) UpdateStickerById(userId int, stickerId int, sticker entity.Sticker) (err error) {
+	stickerModel := model.Sticker{
+		ID:             stickerId,
+		Name:           sticker.Name,
+		Description:    sticker.Description,
+		Category:       string(sticker.Category),
+		Frequency:      string(sticker.Frequency),
+		Status:         string(sticker.Status),
+		IsPublic:       sticker.IsPublic,
+		IsAutoApproval: sticker.IsAutoApproval,
 	}
 
-	query := fmt.Sprintf(query.UpdateStickerByIdQuery, id)
-	_, err = s.DB.NamedExec(query, &sticker)
+	query := fmt.Sprintf(query.UpdateStickerByIdQuery, userId, stickerId)
+	_, err = s.DB.NamedExec(query, &stickerModel)
 	return err
 }
 

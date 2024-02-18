@@ -35,3 +35,9 @@ func (ser *Service) GetStickerById(userId int, stickerId int) (entity.Sticker, e
 
 	return ser.Repository.GetStickerById(userId, stickerId)
 }
+
+func (ser *Service) UpdateStickerById(input entity.Sticker, userId int, stickerId int) error {
+	ser.Logger.Info().Msg("Getting Sticker by id")
+
+	return ser.Repository.UpdateStickerById(userId, stickerId, input)
+}
