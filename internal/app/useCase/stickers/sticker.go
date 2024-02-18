@@ -41,3 +41,9 @@ func (ser *Service) UpdateStickerById(input entity.Sticker, userId int, stickerI
 
 	return ser.Repository.UpdateStickerById(userId, stickerId, input)
 }
+
+func (ser *Service) DeleteStickerById(userId int, stickerId int) error {
+	ser.Logger.Info().Msg("Deleting Sticker by id")
+
+	return ser.Repository.DeleteStickerById(userId, stickerId)
+}

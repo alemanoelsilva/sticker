@@ -178,3 +178,31 @@ func (h *GinHandler) updateStickerById(c *gin.Context) {
 
 	response.SuccessHandler(http.StatusOK, map[string]interface{}{"message": "Sticker Updated"})
 }
+
+func (h *GinHandler) deleteStickerById(c *gin.Context) {
+	response := ResponseJSON{c: c}
+
+	userId, err, code := getUserFromToken(c)
+	if err != nil {
+		response.ErrorHandler(code, err)
+		return
+	}
+
+	stickerIdStr := c.Param("id")
+	if stickerIdStr == "" {
+		response.ErrorHandler(http.StatusBadRequest, errors.New("Sticker id is missing"))
+	}
+
+	stickerId, err := strconv.Atoi(stickerIdStr)
+	if err != nil {
+		response.ErrorHandler(http.StatusBadRequest, errors.New("Sticker id is not a number"))
+		return
+	}
+
+	if err := h.StickerUseCase.DeleteStickerById(userId, stickerId); err != nil {
+		response.ErrorHandler(http.StatusBadRequest, err)
+		return
+	}
+
+	response.SuccessHandler(http.StatusOK, map[string]interface{}{"message": "Sticker Removed"})
+}

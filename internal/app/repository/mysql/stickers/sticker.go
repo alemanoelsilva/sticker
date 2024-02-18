@@ -1,6 +1,7 @@
 package sticker
 
 import (
+	"errors"
 	"fmt"
 	"sticker/internal/app/entity"
 	model "sticker/internal/app/repository/mysql/model"
@@ -99,12 +100,21 @@ func (s *SqlRepository) GetStickers(userId int) ([]entity.Sticker, error) {
 	return details, nil
 }
 
-func (s *SqlRepository) DeleteStickerById(id int) (err error) {
-	query := fmt.Sprintf(query.DeleteStickerByIdQuery, id)
-	_, err = s.DB.Exec(query)
+func (s *SqlRepository) DeleteStickerById(userId int, stickerId int) (err error) {
+	query := fmt.Sprintf(query.DeleteStickerByIdQuery, userId, stickerId)
 
+	result, err := s.DB.Exec(query)
 	if err != nil {
 		return err
+	}
+
+	affect, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if affect == 0 {
+		return errors.New("Sticker not found")
 	}
 
 	return nil
