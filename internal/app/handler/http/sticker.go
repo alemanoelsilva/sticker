@@ -18,8 +18,10 @@ func (h *GinHandler) createSticker(c *gin.Context) {
 	}
 
 	// TODO: validate body request
+	// TODO: validate token
+	// TODO: extract user_id from token
 
-	err := h.UseCase.CreateSticker(input)
+	err := h.StickerUseCase.CreateSticker(input)
 	if err != nil {
 		r.ErrorHandler(http.StatusBadRequest, err)
 		return

@@ -1,4 +1,4 @@
-package useCase
+package stickers
 
 import "sticker/internal/app/entity"
 

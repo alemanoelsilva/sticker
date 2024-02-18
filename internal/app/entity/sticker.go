@@ -34,5 +34,5 @@ type Sticker struct {
 	Frequency      FrequencyType `json:"frequency"`
 	Status         StatusType    `json:"status"`
 	IsPublic       bool          `json:"isPublic"`
-	IsAutoApproved bool          `json:"isAutoApproved"`
+	IsAutoApproval bool          `json:"isAutoApproval"`
 }

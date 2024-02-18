@@ -1,9 +1,10 @@
-package useCase
+package users
 
 import (
 	"errors"
 
 	"sticker/internal/app/entity"
+	// TODO: implement interfaces to encrypt and jwt
 	encrypt "sticker/internal/pkg/encrypt"
 	jwt "sticker/internal/pkg/token"
 )

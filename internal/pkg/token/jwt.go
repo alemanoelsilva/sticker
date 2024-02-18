@@ -9,6 +9,7 @@ import (
 )
 
 func NewAccessToken(user entity.SignIn) (string, error) {
+	// TODO: add user_id to claims
 	claims := entity.JwtClaims{
 		Email:    user.Email,
 		Password: user.Password,

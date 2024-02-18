@@ -8,5 +8,6 @@ type Sticker struct {
 	Frequency      string `db:"frequency"`
 	Status         string `db:"status"`
 	IsPublic       bool   `db:"is_public"`
-	IsAutoApproved bool   `db:"is_auto_approved"`
+	IsAutoApproval bool   `db:"is_auto_approval"`
+	UserId         int    `db:"user_id"`
 }

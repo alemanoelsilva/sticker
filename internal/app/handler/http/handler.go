@@ -1,7 +1,8 @@
 package http
 
 import (
-	"sticker/internal/app/useCase"
+	stickerUseCase "sticker/internal/app/useCase/stickers"
+	userUseCase "sticker/internal/app/useCase/users"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -9,12 +10,14 @@ import (
 )
 
 type GinHandler struct {
-	UseCase useCase.Service
+	UserUseCase    userUseCase.Service
+	StickerUseCase stickerUseCase.Service
 }
 
-func NewGinHandler(useCase useCase.Service) *gin.Engine {
+func NewGinHandler(userUseCase userUseCase.Service, stickerUseCase stickerUseCase.Service) *gin.Engine {
 	handler := &GinHandler{
-		UseCase: useCase,
+		UserUseCase:    userUseCase,
+		StickerUseCase: stickerUseCase,
 	}
 
 	router := gin.Default()

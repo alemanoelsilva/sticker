@@ -1,13 +1,19 @@
-package mysql
+package sticker
 
 import (
 	"fmt"
 	"sticker/internal/app/entity"
 	model "sticker/internal/app/repository/mysql/model"
 	query "sticker/internal/app/repository/mysql/query"
+
+	"github.com/jmoiron/sqlx"
 )
 
-func (s *MysqlDB) AddSticker(details entity.Sticker) (err error) {
+type SqlRepository struct {
+	DB *sqlx.DB
+}
+
+func (s *SqlRepository) AddSticker(details entity.Sticker) (err error) {
 	sticker := model.Sticker{
 		ID:             details.ID,
 		Name:           details.Name,
@@ -16,15 +22,16 @@ func (s *MysqlDB) AddSticker(details entity.Sticker) (err error) {
 		Frequency:      string(details.Frequency),
 		Status:         string(details.Status),
 		IsPublic:       details.IsPublic,
-		IsAutoApproved: details.IsAutoApproved,
+		IsAutoApproval: details.IsAutoApproval,
+		UserId:         1,
 	}
 
 	query := fmt.Sprintf(query.AddStickerQuery)
-	_, err = s.db.NamedExec(query, &sticker)
+	_, err = s.DB.NamedExec(query, &sticker)
 	return err
 }
 
-func (s *MysqlDB) UpdateStickerById(id int, details entity.Sticker) (err error) {
+func (s *SqlRepository) UpdateStickerById(id int, details entity.Sticker) (err error) {
 	sticker := model.Sticker{
 		ID:             details.ID,
 		Name:           details.Name,
@@ -33,20 +40,20 @@ func (s *MysqlDB) UpdateStickerById(id int, details entity.Sticker) (err error) 
 		Frequency:      string(details.Frequency),
 		Status:         string(details.Status),
 		IsPublic:       details.IsPublic,
-		IsAutoApproved: details.IsAutoApproved,
+		IsAutoApproval: details.IsAutoApproval,
 	}
 
 	query := fmt.Sprintf(query.UpdateStickerByIdQuery, id)
-	_, err = s.db.NamedExec(query, &sticker)
+	_, err = s.DB.NamedExec(query, &sticker)
 	return err
 }
 
-func (s *MysqlDB) GetStickerById(id int) (detail entity.Sticker, err error) {
+func (s *SqlRepository) GetStickerById(id int) (detail entity.Sticker, err error) {
 	var stickerModel model.Sticker
 
 	query := fmt.Sprintf(query.GetStickerByIdQuery, id)
 
-	err = s.db.Get(&stickerModel, query)
+	err = s.DB.Get(&stickerModel, query)
 	if err != nil {
 		return detail, err
 	}
@@ -59,18 +66,18 @@ func (s *MysqlDB) GetStickerById(id int) (detail entity.Sticker, err error) {
 		Frequency:      entity.FrequencyType(stickerModel.Frequency),
 		Status:         entity.StatusType(stickerModel.Status),
 		IsPublic:       stickerModel.IsPublic,
-		IsAutoApproved: stickerModel.IsAutoApproved,
+		IsAutoApproval: stickerModel.IsAutoApproval,
 	}
 
 	return detail, nil
 }
 
-func (s *MysqlDB) GetStickers() (detail []entity.Sticker, err error) {
+func (s *SqlRepository) GetStickers() (detail []entity.Sticker, err error) {
 	var stickerModel []model.Sticker
 
 	query := fmt.Sprintf(query.GetStickersQuery)
 
-	err = s.db.Select(&stickerModel, query)
+	err = s.DB.Select(&stickerModel, query)
 	if err != nil {
 		return detail, err
 	}
@@ -81,16 +88,15 @@ func (s *MysqlDB) GetStickers() (detail []entity.Sticker, err error) {
 		detail[i].Category = entity.CategoryType(s.Category)
 		detail[i].Frequency = entity.FrequencyType(s.Frequency)
 		detail[i].Status = entity.StatusType(s.Status)
-		detail[i].IsAutoApproved = s.IsAutoApproved
-		detail[i].IsAutoApproved = s.IsAutoApproved
+		detail[i].IsAutoApproval = s.IsAutoApproval
 	}
 
 	return detail, nil
 }
 
-func (s *MysqlDB) DeleteStickerById(id int) (err error) {
+func (s *SqlRepository) DeleteStickerById(id int) (err error) {
 	query := fmt.Sprintf(query.DeleteStickerByIdQuery, id)
-	_, err = s.db.Exec(query)
+	_, err = s.DB.Exec(query)
 
 	if err != nil {
 		return err

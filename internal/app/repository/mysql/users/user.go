@@ -1,14 +1,19 @@
-package mysql
+package user
 
 import (
 	"fmt"
 	"sticker/internal/app/entity"
 	model "sticker/internal/app/repository/mysql/model"
 	query "sticker/internal/app/repository/mysql/query"
+
+	"github.com/jmoiron/sqlx"
 )
 
-func (s *MysqlDB) AddUser(user entity.User) (err error) {
-	// TODO: add unique constraint to email
+type SqlRepository struct {
+	DB *sqlx.DB
+}
+
+func (s *SqlRepository) AddUser(user entity.User) (err error) {
 	userModel := model.User{
 		ID:       user.ID,
 		Name:     user.Name,
@@ -16,16 +21,16 @@ func (s *MysqlDB) AddUser(user entity.User) (err error) {
 		Password: user.Password,
 	}
 
-	_, err = s.db.NamedExec(query.AddUserQuery, &userModel)
+	_, err = s.DB.NamedExec(query.AddUserQuery, &userModel)
 	return err
 }
 
-func (s *MysqlDB) GetUserById(id int) (detail entity.User, err error) {
+func (s *SqlRepository) GetUserById(id int) (detail entity.User, err error) {
 	var userModel model.User
 
 	query := fmt.Sprintf(query.GetUserByIdQuery, id)
 
-	err = s.db.Get(&userModel, query)
+	err = s.DB.Get(&userModel, query)
 	if err != nil {
 		return detail, err
 	}
@@ -40,12 +45,12 @@ func (s *MysqlDB) GetUserById(id int) (detail entity.User, err error) {
 	return detail, nil
 }
 
-func (s *MysqlDB) GetUserByEmail(email string) (user entity.User, err error) {
+func (s *SqlRepository) GetUserByEmail(email string) (user entity.User, err error) {
 	var userModel model.User
 
 	query := fmt.Sprintf(query.GetUserByEmailQuery, email)
 
-	err = s.db.Get(&userModel, query)
+	err = s.DB.Get(&userModel, query)
 	if err != nil || userModel.ID == 0 {
 		return user, err
 	}
