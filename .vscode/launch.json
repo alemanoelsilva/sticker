@@ -9,11 +9,13 @@
       "type": "go",
       "request": "launch",
       "mode": "exec",
-      "program": "sticker",
+      "program": "charmander",
       "env": {
         "PORT": "4000",
         "DB_STRING": "root:sticker-pass@tcp(localhost:3306)/stickers",
-        "JWT_TOKEN": "SECRET-TOKEN"
+        "JWT_TOKEN": "SECRET-TOKEN",
+        "MIGRATION_PATH": "file://migrations",
+        "MINUTES_TO_JWT_EXPIRE":"180"
       }
     },
     {
@@ -25,7 +27,9 @@
       "env": {
         "PORT": "4000",
         "DB_STRING": "root:sticker-pass@tcp(localhost:3306)/stickers",
-        "JWT_TOKEN": "SECRET-TOKEN"
+        "JWT_TOKEN": "SECRET-TOKEN",
+        "MIGRATION_PATH": "file://migrations",
+        "MINUTES_TO_JWT_EXPIRE":"180"
       }
     }
   ]

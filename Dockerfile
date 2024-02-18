@@ -2,7 +2,7 @@
 FROM golang:1.21
 
 # Set destination for COPY
-WORKDIR /app
+WORKDIR app
 
 # Download Go modules
 COPY go.mod go.sum ./
@@ -13,7 +13,7 @@ RUN go mod download
 COPY . .
 
 # Build
-RUN go build -o /docker-gs-ping
+RUN go build -o /go-charmander ./cmd/server/main.go
 
 # Optional:
 # To bind to a TCP port, runtime parameters must be supplied to the docker command.
@@ -23,4 +23,4 @@ RUN go build -o /docker-gs-ping
 EXPOSE 4000
 
 # Run
-CMD ["/docker-gs-ping"]
+CMD ["/go-charmander"]
