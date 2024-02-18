@@ -6,16 +6,19 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/rs/zerolog/log"
 )
 
 type GinHandler struct {
+	Validator      *validator.Validate
 	UserUseCase    userUseCase.Service
 	StickerUseCase stickerUseCase.Service
 }
 
 func NewGinHandler(userUseCase userUseCase.Service, stickerUseCase stickerUseCase.Service) *gin.Engine {
 	handler := &GinHandler{
+		Validator:      validator.New(),
 		UserUseCase:    userUseCase,
 		StickerUseCase: stickerUseCase,
 	}
@@ -58,7 +61,7 @@ type ResponseJSON struct {
 }
 
 func (s ResponseJSON) SuccessHandler(code int, data interface{}) {
-	s.c.JSON(code, data)
+	s.c.JSON(code, gin.H{"data": data})
 }
 
 func (s ResponseJSON) ErrorHandler(code int, err error) {

@@ -4,10 +4,26 @@ import (
 	"errors"
 
 	"sticker/internal/app/entity"
+	repo "sticker/internal/app/repository/mysql/users"
+
 	// TODO: implement interfaces to encrypt and jwt
 	encrypt "sticker/internal/pkg/encrypt"
 	jwt "sticker/internal/pkg/token"
+
+	"github.com/rs/zerolog"
 )
+
+type Service struct {
+	Repository repo.SqlRepository
+	Logger     *zerolog.Logger
+}
+
+func LoadService(repository repo.SqlRepository, logger *zerolog.Logger) *Service {
+	return &Service{
+		Logger:     logger,
+		Repository: repository,
+	}
+}
 
 func (ser *Service) SignUp(input entity.User) error {
 	ser.Logger.Info().Msg("Creating a User")
