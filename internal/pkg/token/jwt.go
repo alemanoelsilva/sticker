@@ -11,11 +11,13 @@ import (
 func NewAccessToken(user entity.SignIn) (string, error) {
 	// TODO: add user_id to claims
 	claims := entity.JwtClaims{
+		ID:       user.ID,
 		Email:    user.Email,
 		Password: user.Password,
 		StandardClaims: jwt.StandardClaims{
-			IssuedAt:  time.Now().Unix(),
-			ExpiresAt: time.Now().Add(time.Minute * 15).Unix(),
+			IssuedAt: time.Now().Unix(),
+			// TODO: add minutes to ENV
+			ExpiresAt: time.Now().Add(time.Minute * 180).Unix(),
 		},
 	}
 
