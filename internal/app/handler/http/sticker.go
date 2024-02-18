@@ -50,11 +50,43 @@ func (h *GinHandler) createSticker(c *gin.Context) {
 
 	r.SuccessHandler(http.StatusCreated, map[string]interface{}{"Message": "Sticker Created"})
 }
+
+func (h *GinHandler) getStickers(c *gin.Context) {
+	r := ResponseJSON{c: c}
+
+	// TODO: validate body request
+	// TODO: validate token
+	// TODO: extract user_id from token
+
+	tokenString := c.Request.Header["Authorization"]
+	if tokenString == nil {
+		r.ErrorHandler(http.StatusBadRequest, errors.New("Authentication is missing"))
+		return
+	}
+
+	// Split the token string by whitespace to separate "Bearer" from the token
+	parts := strings.Fields(tokenString[0])
+
+	// Check if there are two parts (Bearer and token)
+	if len(parts) != 2 {
+		r.ErrorHandler(http.StatusBadRequest, errors.New("Authentication is missing"))
+		return
+	}
+
+	// Extract the token part
+	authToken := parts[1]
+
+	claims, err := token.ParseAccessToken(authToken)
+	if err != err {
+		r.ErrorHandler(http.StatusNonAuthoritativeInfo, err)
+		return
+	}
+
+	stickers, err := h.StickerUseCase.GetStickers(claims.ID)
 	if err != nil {
 		r.ErrorHandler(http.StatusBadRequest, err)
 		return
 	}
 
-	r.SuccessHandler(http.StatusOK, map[string]interface{}{"Message": "Sticker Created"})
-
+	r.SuccessHandler(http.StatusOK, stickers)
 }

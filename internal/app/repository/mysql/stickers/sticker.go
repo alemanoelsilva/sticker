@@ -72,26 +72,31 @@ func (s *SqlRepository) GetStickerById(id int) (detail entity.Sticker, err error
 	return detail, nil
 }
 
-func (s *SqlRepository) GetStickers() (detail []entity.Sticker, err error) {
+func (s *SqlRepository) GetStickers(userId int) ([]entity.Sticker, error) {
 	var stickerModel []model.Sticker
 
-	query := fmt.Sprintf(query.GetStickersQuery)
+	query := fmt.Sprintf(query.GetStickersQuery, userId)
 
-	err = s.DB.Select(&stickerModel, query)
-	if err != nil {
-		return detail, err
+	if err := s.DB.Select(&stickerModel, query); err != nil {
+		return []entity.Sticker{}, err
 	}
+
+	details := make([]entity.Sticker, len(stickerModel))
 
 	for i, s := range stickerModel {
-		detail[i].ID = s.ID
-		detail[i].Description = s.Description
-		detail[i].Category = entity.CategoryType(s.Category)
-		detail[i].Frequency = entity.FrequencyType(s.Frequency)
-		detail[i].Status = entity.StatusType(s.Status)
-		detail[i].IsAutoApproval = s.IsAutoApproval
+		details[i] = entity.Sticker{
+			ID:             s.ID,
+			Name:           s.Name,
+			Description:    s.Description,
+			Category:       entity.CategoryType(s.Category),
+			Frequency:      entity.FrequencyType(s.Frequency),
+			Status:         entity.StatusType(s.Status),
+			IsPublic:       s.IsPublic,
+			IsAutoApproval: s.IsAutoApproval,
+		}
 	}
 
-	return detail, nil
+	return details, nil
 }
 
 func (s *SqlRepository) DeleteStickerById(id int) (err error) {
