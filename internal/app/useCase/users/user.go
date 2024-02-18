@@ -40,6 +40,8 @@ func (ser *Service) SignIn(input entity.SignIn) (token string, err error) {
 		return "", errors.New("Wrong password")
 	}
 
+	input.ID = userModel.ID
+
 	token, err = jwt.NewAccessToken(input)
 	if err != nil {
 		ser.Logger.Error().Msg(err.Error())
