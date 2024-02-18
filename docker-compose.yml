@@ -34,6 +34,7 @@ services:
       DB_STRING: ${DB_STRING}
       JWT_TOKEN: ${JWT_TOKEN}
       MIGRATION_PATH: ${MIGRATION_PATH}
+      MINUTES_TO_JWT_EXPIRE: ${MINUTES_TO_JWT_EXPIRE}
     depends_on:
       - db
     links:

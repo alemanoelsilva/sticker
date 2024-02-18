@@ -10,15 +10,13 @@ import (
 )
 
 func NewAccessToken(user entity.SignIn) (string, error) {
-	// TODO: add user_id to claims
 	claims := entity.JwtClaims{
 		ID:       user.ID,
 		Email:    user.Email,
 		Password: user.Password,
 		StandardClaims: jwt.StandardClaims{
-			IssuedAt: time.Now().Unix(),
-			// TODO: add minutes to ENV
-			ExpiresAt: time.Now().Add(time.Minute * 180).Unix(),
+			IssuedAt:  time.Now().Unix(),
+			ExpiresAt: time.Now().Add(time.Minute * time.Duration(config.AppConfig.MinutesToJwtExpire)).Unix(),
 		},
 	}
 
@@ -32,7 +30,7 @@ func ParseAccessToken(accessToken string) (*entity.JwtClaims, error) {
 		return []byte(config.AppConfig.SecretToken), nil
 	})
 	if err != nil {
-		return nil, errors.New("authorization token is invalid")
+		return nil, errors.New("Authorization token is invalid")
 	}
 
 	return parsedAccessToken.Claims.(*entity.JwtClaims), nil

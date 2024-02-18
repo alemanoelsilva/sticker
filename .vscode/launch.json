@@ -14,7 +14,8 @@
         "PORT": "4000",
         "DB_STRING": "root:sticker-pass@tcp(localhost:3306)/stickers",
         "JWT_TOKEN": "SECRET-TOKEN",
-        "MIGRATION_PATH": "file://migrations"
+        "MIGRATION_PATH": "file://migrations",
+        "MINUTES_TO_JWT_EXPIRE":"180"
       }
     },
     {
@@ -27,7 +28,8 @@
         "PORT": "4000",
         "DB_STRING": "root:sticker-pass@tcp(localhost:3306)/stickers",
         "JWT_TOKEN": "SECRET-TOKEN",
-        "MIGRATION_PATH": "file://migrations"
+        "MIGRATION_PATH": "file://migrations",
+        "MINUTES_TO_JWT_EXPIRE":"180"
       }
     }
   ]
