@@ -44,6 +44,7 @@ func NewGinHandler(userUseCase userUseCase.Service, stickerUseCase stickerUseCas
 	// Stickers
 	router.POST("/api/v1/stickers", handler.createSticker)
 	router.GET("/api/v1/stickers", handler.getStickers)
+	router.GET("/api/v1/stickers/:id", handler.getStickerById)
 
 	// Users
 	router.POST("/api/v1/sign-up", handler.signUp)

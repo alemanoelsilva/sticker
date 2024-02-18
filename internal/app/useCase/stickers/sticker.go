@@ -29,3 +29,9 @@ func (ser *Service) GetStickers(userId int) ([]entity.Sticker, error) {
 
 	return ser.Repository.GetStickers(userId)
 }
+
+func (ser *Service) GetStickerById(userId int, stickerId int) (entity.Sticker, error) {
+	ser.Logger.Info().Msg("Getting Sticker by id")
+
+	return ser.Repository.GetStickerById(userId, stickerId)
+}

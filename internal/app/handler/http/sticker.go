@@ -13,9 +13,13 @@ import (
 )
 
 func getUserFromToken(c *gin.Context) (userId int, err error, code int) {
-	tokenString := c.Request.Header["Authorization"][0]
+	tokenString := c.Request.Header["Authorization"]
+	if tokenString == nil {
+		return 0, errors.New("Authentication is missing"), http.StatusBadRequest
+	}
+
 	// Split the token string by whitespace to separate "Bearer" from the token
-	parts := strings.Fields(tokenString)
+	parts := strings.Fields(tokenString[0])
 
 	// Check if there are two parts (Bearer and token)
 	if len(parts) != 2 {
@@ -77,6 +81,24 @@ func (h *GinHandler) createSticker(c *gin.Context) {
 func (h *GinHandler) getStickers(c *gin.Context) {
 	response := ResponseJSON{c: c}
 
+	userId, err, code := getUserFromToken(c)
+	if err != nil {
+		response.ErrorHandler(code, err)
+		return
+	}
+
+	stickers, err := h.StickerUseCase.GetStickers(userId)
+	if err != nil {
+		response.ErrorHandler(http.StatusBadRequest, err)
+		return
+	}
+
+	response.SuccessHandler(http.StatusOK, stickers)
+}
+
+func (h *GinHandler) getStickerById(c *gin.Context) {
+	response := ResponseJSON{c: c}
+
 	tokenString := c.Request.Header["Authorization"]
 	if tokenString == nil {
 		response.ErrorHandler(http.StatusBadRequest, errors.New("Authentication is missing"))
@@ -89,7 +111,18 @@ func (h *GinHandler) getStickers(c *gin.Context) {
 		return
 	}
 
-	stickers, err := h.StickerUseCase.GetStickers(userId)
+	stickerIdStr := c.Param("id")
+	if stickerIdStr == "" {
+		response.ErrorHandler(http.StatusBadRequest, errors.New("Sticker id is missing"))
+	}
+
+	stickerId, err := strconv.Atoi(stickerIdStr)
+	if err != nil {
+		response.ErrorHandler(http.StatusBadRequest, errors.New("Sticker id is not a number"))
+		return
+	}
+
+	stickers, err := h.StickerUseCase.GetStickerById(userId, stickerId)
 	if err != nil {
 		response.ErrorHandler(http.StatusBadRequest, err)
 		return

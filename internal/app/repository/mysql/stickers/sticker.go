@@ -48,10 +48,10 @@ func (s *SqlRepository) UpdateStickerById(id int, details entity.Sticker) (err e
 	return err
 }
 
-func (s *SqlRepository) GetStickerById(id int) (detail entity.Sticker, err error) {
+func (s *SqlRepository) GetStickerById(userId int, stickerId int) (detail entity.Sticker, err error) {
 	var stickerModel model.Sticker
 
-	query := fmt.Sprintf(query.GetStickerByIdQuery, id)
+	query := fmt.Sprintf(query.GetStickerByIdQuery, userId, stickerId)
 
 	err = s.DB.Get(&stickerModel, query)
 	if err != nil {
