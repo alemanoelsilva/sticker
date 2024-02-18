@@ -13,7 +13,7 @@ type SqlRepository struct {
 	DB *sqlx.DB
 }
 
-func (s *SqlRepository) AddSticker(details entity.Sticker) (err error) {
+func (s *SqlRepository) AddSticker(details entity.Sticker, userId int) (err error) {
 	sticker := model.Sticker{
 		ID:             details.ID,
 		Name:           details.Name,
@@ -23,7 +23,7 @@ func (s *SqlRepository) AddSticker(details entity.Sticker) (err error) {
 		Status:         string(details.Status),
 		IsPublic:       details.IsPublic,
 		IsAutoApproval: details.IsAutoApproval,
-		UserId:         1,
+		UserId:         userId,
 	}
 
 	query := fmt.Sprintf(query.AddStickerQuery)
