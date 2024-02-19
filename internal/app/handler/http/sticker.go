@@ -4,47 +4,32 @@ import (
 	"errors"
 	"net/http"
 	"sticker/internal/app/entity"
-	"sticker/internal/pkg/token"
 	"strconv"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
 
-func getUserFromToken(c *gin.Context) (int, int, error) {
-	tokenString := c.Request.Header["Authorization"]
-	if tokenString == nil {
-		return 0, http.StatusBadRequest, errors.New("Authentication is missing")
+func getUserFromHeaders(c *gin.Context) int {
+	userId := c.GetInt("userId")
+
+	if userId == 0 {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "You are not logged in"})
+		return 0
 	}
 
-	// Split the token string by whitespace to separate "Bearer" from the token
-	parts := strings.Fields(tokenString[0])
-
-	// Check if there are two parts (Bearer and token)
-	if len(parts) != 2 {
-		return 0, http.StatusBadRequest, errors.New("Authentication is missing")
-	}
-
-	// Extract the token part
-	authToken := parts[1]
-
-	claims, err := token.ParseAccessToken(authToken)
-	if err != err {
-		return 0, http.StatusNonAuthoritativeInfo, err
-	}
-
-	return claims.ID, 0, nil
+	return userId
 }
 
 func getIdFromParams(c *gin.Context) (int, error) {
 	idStr := c.Param("id")
 	if idStr == "" {
-		return 0, errors.New("Sticker id is missing")
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Sticker id is missing"})
+		// TODO: return and handle if on caller level?
 	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		return id, errors.New("Sticker id is not a number")
+		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Sticker id is not a number"})
 	}
 
 	return id, nil
@@ -60,11 +45,7 @@ func (h *GinHandler) createSticker(c *gin.Context) {
 		return
 	}
 
-	userId, code, err := getUserFromToken(c)
-	if err != nil {
-		response.ErrorHandler(code, err)
-		return
-	}
+	userId := getUserFromHeaders(c)
 
 	if err := h.StickerUseCase.CreateSticker(input, userId); err != nil {
 		response.ErrorHandler(http.StatusBadRequest, err)
@@ -77,11 +58,7 @@ func (h *GinHandler) createSticker(c *gin.Context) {
 func (h *GinHandler) getStickers(c *gin.Context) {
 	response := ResponseJSON{c: c}
 
-	userId, code, err := getUserFromToken(c)
-	if err != nil {
-		response.ErrorHandler(code, err)
-		return
-	}
+	userId := getUserFromHeaders(c)
 
 	stickers, err := h.StickerUseCase.GetStickers(userId)
 	if err != nil {
@@ -101,11 +78,7 @@ func (h *GinHandler) getStickerById(c *gin.Context) {
 		return
 	}
 
-	userId, code, err := getUserFromToken(c)
-	if err != nil {
-		response.ErrorHandler(code, err)
-		return
-	}
+	userId := getUserFromHeaders(c)
 
 	id, err := getIdFromParams(c)
 	if err != nil {
@@ -132,11 +105,7 @@ func (h *GinHandler) updateStickerById(c *gin.Context) {
 		return
 	}
 
-	userId, code, err := getUserFromToken(c)
-	if err != nil {
-		response.ErrorHandler(code, err)
-		return
-	}
+	userId := getUserFromHeaders(c)
 
 	id, err := getIdFromParams(c)
 	if err != nil {
@@ -155,11 +124,7 @@ func (h *GinHandler) updateStickerById(c *gin.Context) {
 func (h *GinHandler) deleteStickerById(c *gin.Context) {
 	response := ResponseJSON{c: c}
 
-	userId, code, err := getUserFromToken(c)
-	if err != nil {
-		response.ErrorHandler(code, err)
-		return
-	}
+	userId := getUserFromHeaders(c)
 
 	id, err := getIdFromParams(c)
 	if err != nil {
