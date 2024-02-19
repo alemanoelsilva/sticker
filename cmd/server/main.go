@@ -14,6 +14,7 @@ import (
 	stickerUseCase "sticker/internal/app/useCase/stickers"
 	userUseCase "sticker/internal/app/useCase/users"
 
+	"github.com/go-playground/validator/v10"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/rs/zerolog"
 )
@@ -21,6 +22,7 @@ import (
 func main() {
 	// Set up ZeroLog logger
 	logger := zerolog.New(os.Stdout)
+	validator := *validator.New()
 
 	config.LoadAppConfig(&logger)
 
@@ -31,11 +33,12 @@ func main() {
 	// ddb.RunMigrations()
 
 	logger.Info().Msg("Initializing Repository (MySQL)")
-	userRepository, stickerRepository := repo.NewSqlRepository(db)
+	// TODO: split repositories
+	userRepository, stickerRepository := repo.NewSqlRepository(db, &logger)
 
 	logger.Info().Msg("Initializing UseCases")
-	userUseCaseService := userUseCase.LoadService(*userRepository, &logger)
-	stickerUseCaseService := stickerUseCase.LoadService(*stickerRepository, &logger)
+	userUseCaseService := userUseCase.LoadService(&validator, *userRepository, &logger)
+	stickerUseCaseService := stickerUseCase.LoadService(&validator, *stickerRepository, &logger)
 
 	logger.Info().Msg("Initializing Handlers")
 	router := handler.NewGinHandler(*userUseCaseService, *stickerUseCaseService)

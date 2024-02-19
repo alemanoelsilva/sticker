@@ -3,30 +3,42 @@ package users
 import (
 	"errors"
 
-	"sticker/internal/app/entity"
+	entity "sticker/internal/app/entity"
+	validators "sticker/internal/app/handler/http/validators"
 	repo "sticker/internal/app/repository/mysql/users"
 
 	// TODO: implement interfaces to encrypt and jwt
 	encrypt "sticker/internal/pkg/encrypt"
 	jwt "sticker/internal/pkg/token"
 
+	"github.com/go-playground/validator/v10"
 	"github.com/rs/zerolog"
 )
 
 type Service struct {
+	Validator  *validator.Validate
 	Repository repo.SqlRepository
 	Logger     *zerolog.Logger
 }
 
-func LoadService(repository repo.SqlRepository, logger *zerolog.Logger) *Service {
+func LoadService(v *validator.Validate, r repo.SqlRepository, l *zerolog.Logger) *Service {
 	return &Service{
-		Logger:     logger,
-		Repository: repository,
+		Validator:  v,
+		Repository: r,
+		Logger:     l,
 	}
 }
 
-func (ser *Service) SignUp(input entity.User) error {
+func (ser *Service) SignUp(input entity.User) (err error) {
 	ser.Logger.Info().Msg("Creating a User")
+
+	if err = ser.Validator.Struct(validators.SignUp{
+		Name:     input.Name,
+		Email:    input.Email,
+		Password: input.Password,
+	}); err != nil {
+		return err
+	}
 
 	hashedPassword, err := encrypt.Hash(input.Password)
 	if err != nil {
@@ -41,6 +53,13 @@ func (ser *Service) SignUp(input entity.User) error {
 
 func (ser *Service) SignIn(input entity.SignIn) (token string, err error) {
 	ser.Logger.Info().Msg("Signing in a User")
+
+	if err := ser.Validator.Struct(validators.SignIn{
+		Email:    input.Email,
+		Password: input.Password,
+	}); err != nil {
+		return "", err
+	}
 
 	userModel, err := ser.Repository.GetUserByEmail(input.Email)
 	if err != nil {

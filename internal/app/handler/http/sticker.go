@@ -4,7 +4,6 @@ import (
 	"errors"
 	"net/http"
 	"sticker/internal/app/entity"
-	"sticker/internal/app/handler/http/validators"
 	"sticker/internal/pkg/token"
 	"strconv"
 	"strings"
@@ -12,10 +11,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func getUserFromToken(c *gin.Context) (userId int, err error, code int) {
+func getUserFromToken(c *gin.Context) (int, int, error) {
 	tokenString := c.Request.Header["Authorization"]
 	if tokenString == nil {
-		return 0, errors.New("Authentication is missing"), http.StatusBadRequest
+		return 0, http.StatusBadRequest, errors.New("Authentication is missing")
 	}
 
 	// Split the token string by whitespace to separate "Bearer" from the token
@@ -23,9 +22,7 @@ func getUserFromToken(c *gin.Context) (userId int, err error, code int) {
 
 	// Check if there are two parts (Bearer and token)
 	if len(parts) != 2 {
-		return 0, errors.New("Authentication is missing"), http.StatusBadRequest
-		// response.ErrorHandler(http.StatusBadRequest, errors.New("Authentication is missing"))
-		// return
+		return 0, http.StatusBadRequest, errors.New("Authentication is missing")
 	}
 
 	// Extract the token part
@@ -33,12 +30,24 @@ func getUserFromToken(c *gin.Context) (userId int, err error, code int) {
 
 	claims, err := token.ParseAccessToken(authToken)
 	if err != err {
-		return 0, err, http.StatusNonAuthoritativeInfo
-		// response.ErrorHandler(http.StatusNonAuthoritativeInfo, err)
-		// return
+		return 0, http.StatusNonAuthoritativeInfo, err
 	}
 
-	return claims.ID, nil, 0
+	return claims.ID, 0, nil
+}
+
+func getIdFromParams(c *gin.Context) (int, error) {
+	idStr := c.Param("id")
+	if idStr == "" {
+		return 0, errors.New("Sticker id is missing")
+	}
+
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		return id, errors.New("Sticker id is not a number")
+	}
+
+	return id, nil
 }
 
 func (h *GinHandler) createSticker(c *gin.Context) {
@@ -46,27 +55,14 @@ func (h *GinHandler) createSticker(c *gin.Context) {
 
 	var input entity.Sticker
 
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.BindJSON(&input); err != nil {
 		response.ErrorHandler(http.StatusBadRequest, err)
 		return
 	}
 
-	userId, err, code := getUserFromToken(c)
+	userId, code, err := getUserFromToken(c)
 	if err != nil {
 		response.ErrorHandler(code, err)
-		return
-	}
-
-	if err := h.Validator.Struct(validators.Sticker{
-		Name:           input.Name,
-		Description:    input.Description,
-		Category:       string(input.Category),
-		Frequency:      string(input.Frequency),
-		Status:         string(input.Status),
-		IsPublic:       strconv.FormatBool(input.IsPublic),
-		IsAutoApproval: strconv.FormatBool(input.IsAutoApproval),
-	}); err != nil {
-		response.ErrorHandler(http.StatusBadRequest, err)
 		return
 	}
 
@@ -75,13 +71,13 @@ func (h *GinHandler) createSticker(c *gin.Context) {
 		return
 	}
 
-	response.SuccessHandler(http.StatusCreated, map[string]interface{}{"message": "Sticker Created"})
+	response.SuccessHandler(http.StatusCreated, handleResponseMessage("Sticker Created"))
 }
 
 func (h *GinHandler) getStickers(c *gin.Context) {
 	response := ResponseJSON{c: c}
 
-	userId, err, code := getUserFromToken(c)
+	userId, code, err := getUserFromToken(c)
 	if err != nil {
 		response.ErrorHandler(code, err)
 		return
@@ -105,24 +101,19 @@ func (h *GinHandler) getStickerById(c *gin.Context) {
 		return
 	}
 
-	userId, err, code := getUserFromToken(c)
+	userId, code, err := getUserFromToken(c)
 	if err != nil {
 		response.ErrorHandler(code, err)
 		return
 	}
 
-	stickerIdStr := c.Param("id")
-	if stickerIdStr == "" {
-		response.ErrorHandler(http.StatusBadRequest, errors.New("Sticker id is missing"))
-	}
-
-	stickerId, err := strconv.Atoi(stickerIdStr)
+	id, err := getIdFromParams(c)
 	if err != nil {
-		response.ErrorHandler(http.StatusBadRequest, errors.New("Sticker id is not a number"))
+		response.ErrorHandler(http.StatusBadRequest, err)
 		return
 	}
 
-	stickers, err := h.StickerUseCase.GetStickerById(userId, stickerId)
+	stickers, err := h.StickerUseCase.GetStickerById(userId, id)
 	if err != nil {
 		response.ErrorHandler(http.StatusBadRequest, err)
 		return
@@ -136,73 +127,50 @@ func (h *GinHandler) updateStickerById(c *gin.Context) {
 
 	var input entity.Sticker
 
-	if err := c.ShouldBindJSON(&input); err != nil {
+	if err := c.BindJSON(&input); err != nil {
 		response.ErrorHandler(http.StatusBadRequest, err)
 		return
 	}
 
-	userId, err, code := getUserFromToken(c)
+	userId, code, err := getUserFromToken(c)
 	if err != nil {
 		response.ErrorHandler(code, err)
 		return
 	}
 
-	stickerIdStr := c.Param("id")
-	if stickerIdStr == "" {
-		response.ErrorHandler(http.StatusBadRequest, errors.New("Sticker id is missing"))
-	}
-
-	stickerId, err := strconv.Atoi(stickerIdStr)
+	id, err := getIdFromParams(c)
 	if err != nil {
-		response.ErrorHandler(http.StatusBadRequest, errors.New("Sticker id is not a number"))
-		return
-	}
-
-	if err := h.Validator.Struct(validators.Sticker{
-		Name:           input.Name,
-		Description:    input.Description,
-		Category:       string(input.Category),
-		Frequency:      string(input.Frequency),
-		Status:         string(input.Status),
-		IsPublic:       strconv.FormatBool(input.IsPublic),
-		IsAutoApproval: strconv.FormatBool(input.IsAutoApproval),
-	}); err != nil {
 		response.ErrorHandler(http.StatusBadRequest, err)
 		return
 	}
 
-	if err := h.StickerUseCase.UpdateStickerById(input, userId, stickerId); err != nil {
+	if err := h.StickerUseCase.UpdateStickerById(input, userId, id); err != nil {
 		response.ErrorHandler(http.StatusBadRequest, err)
 		return
 	}
 
-	response.SuccessHandler(http.StatusOK, map[string]interface{}{"message": "Sticker Updated"})
+	response.SuccessHandler(http.StatusOK, handleResponseMessage("Sticker Updated"))
 }
 
 func (h *GinHandler) deleteStickerById(c *gin.Context) {
 	response := ResponseJSON{c: c}
 
-	userId, err, code := getUserFromToken(c)
+	userId, code, err := getUserFromToken(c)
 	if err != nil {
 		response.ErrorHandler(code, err)
 		return
 	}
 
-	stickerIdStr := c.Param("id")
-	if stickerIdStr == "" {
-		response.ErrorHandler(http.StatusBadRequest, errors.New("Sticker id is missing"))
-	}
-
-	stickerId, err := strconv.Atoi(stickerIdStr)
+	id, err := getIdFromParams(c)
 	if err != nil {
-		response.ErrorHandler(http.StatusBadRequest, errors.New("Sticker id is not a number"))
-		return
-	}
-
-	if err := h.StickerUseCase.DeleteStickerById(userId, stickerId); err != nil {
 		response.ErrorHandler(http.StatusBadRequest, err)
 		return
 	}
 
-	response.SuccessHandler(http.StatusOK, map[string]interface{}{"message": "Sticker Removed"})
+	if err := h.StickerUseCase.DeleteStickerById(userId, id); err != nil {
+		response.ErrorHandler(http.StatusBadRequest, err)
+		return
+	}
+
+	response.SuccessHandler(http.StatusOK, handleResponseMessage("Sticker Removed"))
 }

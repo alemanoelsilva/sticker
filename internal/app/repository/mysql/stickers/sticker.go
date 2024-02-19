@@ -3,15 +3,21 @@ package sticker
 import (
 	"errors"
 	"fmt"
-	"sticker/internal/app/entity"
+	entity "sticker/internal/app/entity"
 	model "sticker/internal/app/repository/mysql/model"
 	query "sticker/internal/app/repository/mysql/query"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog"
 )
 
+func handleSqlError() error {
+	return errors.New("Internal Server Error")
+}
+
 type SqlRepository struct {
-	DB *sqlx.DB
+	DB     *sqlx.DB
+	Logger *zerolog.Logger
 }
 
 func (s *SqlRepository) AddSticker(details entity.Sticker, userId int) (err error) {
@@ -28,12 +34,28 @@ func (s *SqlRepository) AddSticker(details entity.Sticker, userId int) (err erro
 	}
 
 	query := fmt.Sprintf(query.AddStickerQuery)
-	_, err = s.DB.NamedExec(query, &sticker)
+	if _, err = s.DB.NamedExec(query, &sticker); err != nil {
+		s.Logger.Error().Err(err)
+		return handleSqlError()
+	}
 	return err
 }
 
 func (s *SqlRepository) UpdateStickerById(userId int, stickerId int, sticker entity.Sticker) (err error) {
-	stickerModel := model.Sticker{
+	var stickerModel model.Sticker
+	if err = s.DB.Get(&stickerModel, fmt.Sprintf(query.GetStickerByIdQuery, userId, stickerId)); err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return errors.New("Sticker not found")
+		}
+		s.Logger.Error().Err(err)
+		return handleSqlError()
+	}
+
+	if stickerModel.ID == 0 {
+		return errors.New("Sticker not found")
+	}
+
+	stickerModel = model.Sticker{
 		ID:             stickerId,
 		Name:           sticker.Name,
 		Description:    sticker.Description,
@@ -45,8 +67,12 @@ func (s *SqlRepository) UpdateStickerById(userId int, stickerId int, sticker ent
 	}
 
 	query := fmt.Sprintf(query.UpdateStickerByIdQuery, userId, stickerId)
-	_, err = s.DB.NamedExec(query, &stickerModel)
-	return err
+	if _, err = s.DB.NamedExec(query, &stickerModel); err != nil {
+		s.Logger.Error().Err(err)
+		return handleSqlError()
+	}
+
+	return nil
 }
 
 func (s *SqlRepository) GetStickerById(userId int, stickerId int) (detail entity.Sticker, err error) {
@@ -54,9 +80,12 @@ func (s *SqlRepository) GetStickerById(userId int, stickerId int) (detail entity
 
 	query := fmt.Sprintf(query.GetStickerByIdQuery, userId, stickerId)
 
-	err = s.DB.Get(&stickerModel, query)
-	if err != nil {
-		return detail, err
+	if err = s.DB.Get(&stickerModel, query); err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return detail, errors.New("Sticker not found")
+		}
+		s.Logger.Error().Err(err)
+		return detail, handleSqlError()
 	}
 
 	detail = entity.Sticker{
@@ -73,16 +102,17 @@ func (s *SqlRepository) GetStickerById(userId int, stickerId int) (detail entity
 	return detail, nil
 }
 
-func (s *SqlRepository) GetStickers(userId int) ([]entity.Sticker, error) {
+func (s *SqlRepository) GetStickers(userId int) (details []entity.Sticker, err error) {
 	var stickerModel []model.Sticker
 
 	query := fmt.Sprintf(query.GetStickersQuery, userId)
 
 	if err := s.DB.Select(&stickerModel, query); err != nil {
-		return []entity.Sticker{}, err
+		s.Logger.Error().Err(err)
+		return details, handleSqlError()
 	}
 
-	details := make([]entity.Sticker, len(stickerModel))
+	details = make([]entity.Sticker, len(stickerModel))
 
 	for i, s := range stickerModel {
 		details[i] = entity.Sticker{
@@ -105,12 +135,14 @@ func (s *SqlRepository) DeleteStickerById(userId int, stickerId int) (err error)
 
 	result, err := s.DB.Exec(query)
 	if err != nil {
-		return err
+		s.Logger.Error().Err(err)
+		return handleSqlError()
 	}
 
 	affect, err := result.RowsAffected()
 	if err != nil {
-		return err
+		s.Logger.Error().Err(err)
+		return handleSqlError()
 	}
 
 	if affect == 0 {

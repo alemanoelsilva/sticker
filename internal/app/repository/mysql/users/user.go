@@ -1,16 +1,23 @@
 package user
 
 import (
+	"errors"
 	"fmt"
 	"sticker/internal/app/entity"
 	model "sticker/internal/app/repository/mysql/model"
 	query "sticker/internal/app/repository/mysql/query"
 
 	"github.com/jmoiron/sqlx"
+	"github.com/rs/zerolog"
 )
 
+func handleSqlError() error {
+	return errors.New("Internal Server Error")
+}
+
 type SqlRepository struct {
-	DB *sqlx.DB
+	DB     *sqlx.DB
+	Logger *zerolog.Logger
 }
 
 func (s *SqlRepository) AddUser(user entity.User) (err error) {
@@ -21,28 +28,32 @@ func (s *SqlRepository) AddUser(user entity.User) (err error) {
 		Password: user.Password,
 	}
 
-	_, err = s.DB.NamedExec(query.AddUserQuery, &userModel)
-	return err
+	if _, err = s.DB.NamedExec(query.AddUserQuery, &userModel); err != nil {
+		s.Logger.Error().Err(err)
+		return handleSqlError()
+	}
+
+	return nil
 }
 
-func (s *SqlRepository) GetUserById(id int) (detail entity.User, err error) {
+func (s *SqlRepository) GetUserById(id int) (user entity.User, err error) {
 	var userModel model.User
 
 	query := fmt.Sprintf(query.GetUserByIdQuery, id)
 
-	err = s.DB.Get(&userModel, query)
-	if err != nil {
-		return detail, err
+	if err = s.DB.Get(&userModel, query); err != nil {
+		s.Logger.Error().Err(err)
+		return user, handleSqlError()
 	}
 
-	detail = entity.User{
+	user = entity.User{
 		ID:       userModel.ID,
 		Name:     userModel.Name,
 		Email:    userModel.Email,
 		Password: userModel.Password,
 	}
 
-	return detail, nil
+	return user, nil
 }
 
 func (s *SqlRepository) GetUserByEmail(email string) (user entity.User, err error) {
@@ -50,9 +61,13 @@ func (s *SqlRepository) GetUserByEmail(email string) (user entity.User, err erro
 
 	query := fmt.Sprintf(query.GetUserByEmailQuery, email)
 
-	err = s.DB.Get(&userModel, query)
-	if err != nil || userModel.ID == 0 {
-		return user, err
+	if err = s.DB.Get(&userModel, query); err != nil {
+		s.Logger.Error().Err(err)
+		return user, handleSqlError()
+	}
+
+	if userModel.ID == 0 {
+		return user, errors.New("User not found")
 	}
 
 	user = entity.User{

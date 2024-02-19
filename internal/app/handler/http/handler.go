@@ -6,19 +6,16 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/go-playground/validator/v10"
 	"github.com/rs/zerolog/log"
 )
 
 type GinHandler struct {
-	Validator      *validator.Validate
 	UserUseCase    userUseCase.Service
 	StickerUseCase stickerUseCase.Service
 }
 
 func NewGinHandler(userUseCase userUseCase.Service, stickerUseCase stickerUseCase.Service) *gin.Engine {
 	handler := &GinHandler{
-		Validator:      validator.New(),
 		UserUseCase:    userUseCase,
 		StickerUseCase: stickerUseCase,
 	}
@@ -59,14 +56,18 @@ func now() time.Time {
 	return time.Now()
 }
 
+func handleResponseMessage(msg string) interface{} {
+	return map[string]interface{}{"message": msg}
+}
+
 type ResponseJSON struct {
 	c *gin.Context
 }
 
 func (s ResponseJSON) SuccessHandler(code int, data interface{}) {
-	s.c.JSON(code, gin.H{"data": data})
+	s.c.IndentedJSON(code, data)
 }
 
 func (s ResponseJSON) ErrorHandler(code int, err error) {
-	s.c.JSON(code, gin.H{"error": err.Error()})
+	s.c.IndentedJSON(code, gin.H{"error": err.Error()})
 }
