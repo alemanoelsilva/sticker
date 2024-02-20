@@ -7,6 +7,11 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func LoadUserRoutes(router *gin.Engine, handler *GinHandler) {
+	router.POST("/api/v1/sign-up", handler.signUp)
+	router.POST("/api/v1/sign-in", handler.signIn)
+}
+
 func (h *GinHandler) signUp(c *gin.Context) {
 	response := ResponseJSON{c: c}
 

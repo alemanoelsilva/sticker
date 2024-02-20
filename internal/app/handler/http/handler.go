@@ -1,7 +1,6 @@
 package http
 
 import (
-	"sticker/internal/app/handler/http/middleware"
 	stickerUseCase "sticker/internal/app/useCase/stickers"
 	userUseCase "sticker/internal/app/useCase/users"
 	"time"
@@ -39,16 +38,10 @@ func NewGinHandler(userUseCase userUseCase.Service, stickerUseCase stickerUseCas
 			Msg("Request handled")
 	})
 
-	// Stickers
-	router.POST("/api/v1/stickers", middleware.TokenAuthMiddleware(), handler.createSticker)
-	router.GET("/api/v1/stickers", middleware.TokenAuthMiddleware(), handler.getStickers)
-	router.GET("/api/v1/stickers/:id", middleware.TokenAuthMiddleware(), handler.getStickerById)
-	router.PUT("/api/v1/stickers/:id", middleware.TokenAuthMiddleware(), handler.updateStickerById)
-	router.DELETE("/api/v1/stickers/:id", middleware.TokenAuthMiddleware(), handler.deleteStickerById)
-
 	// Users
-	router.POST("/api/v1/sign-up", handler.signUp)
-	router.POST("/api/v1/sign-in", handler.signIn)
+	LoadUserRoutes(router, handler)
+	// Stickers
+	LoadStickerRoutes(router, handler)
 
 	return router
 }

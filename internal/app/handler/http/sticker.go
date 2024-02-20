@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"sticker/internal/app/entity"
+	"sticker/internal/app/handler/http/middleware"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
@@ -33,6 +34,15 @@ func getIdFromParams(c *gin.Context) (int, error) {
 	}
 
 	return id, nil
+}
+
+func LoadStickerRoutes(router *gin.Engine, handler *GinHandler) {
+	router.POST("/api/v1/stickers", middleware.TokenAuthMiddleware(), handler.createSticker)
+	router.GET("/api/v1/stickers", middleware.TokenAuthMiddleware(), handler.getStickers)
+	router.GET("/api/v1/stickers/:id", middleware.TokenAuthMiddleware(), handler.getStickerById)
+	router.PUT("/api/v1/stickers/:id", middleware.TokenAuthMiddleware(), handler.updateStickerById)
+	router.DELETE("/api/v1/stickers/:id", middleware.TokenAuthMiddleware(), handler.deleteStickerById)
+	// router.DELETE("/api/v1/stickers/:id/inactivate", middleware.TokenAuthMiddleware(), handler.deleteStickerById)
 }
 
 func (h *GinHandler) createSticker(c *gin.Context) {
