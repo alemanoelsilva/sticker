@@ -24,7 +24,7 @@ func getIdFromParams(c *gin.Context) (int, error) {
 	idStr := c.Param("id")
 	if idStr == "" {
 		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Sticker id is missing"})
-		// TODO: return and handle if on caller level?
+		// TODO: return and handle it on caller level?
 	}
 
 	id, err := strconv.Atoi(idStr)
