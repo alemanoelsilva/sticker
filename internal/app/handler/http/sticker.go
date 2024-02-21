@@ -4,148 +4,145 @@ import (
 	"errors"
 	"net/http"
 	"sticker/internal/app/entity"
-	"sticker/internal/app/handler/http/middleware"
+	middleware "sticker/internal/app/handler/http/middleware"
 	"strconv"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 )
 
-func getUserFromHeaders(c *gin.Context) int {
-	userId := c.GetInt("userId")
-
+func getUserIdFromHeaders(c echo.Context) (int, error) {
+	userId := c.Get("userId").(int)
 	if userId == 0 {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "You are not logged in"})
-		return 0
+		return 0, errors.New("you are not logged in")
 	}
 
-	return userId
+	return userId, nil
 }
 
-func getIdFromParams(c *gin.Context) (int, error) {
+func getIdFromParams(c echo.Context) (int, error) {
 	idStr := c.Param("id")
 	if idStr == "" {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Sticker id is missing"})
+		return 0, errors.New("sticker id is missing")
 		// TODO: return and handle it on caller level?
 	}
 
 	id, err := strconv.Atoi(idStr)
 	if err != nil {
-		c.AbortWithStatusJSON(http.StatusBadRequest, gin.H{"error": "Sticker id is not a number"})
+		return 0, errors.New("sticker id is not a number")
 	}
 
 	return id, nil
 }
 
-func LoadStickerRoutes(router *gin.Engine, handler *GinHandler) {
-	router.POST("/api/v1/stickers", middleware.TokenAuthMiddleware(), handler.createSticker)
-	router.GET("/api/v1/stickers", middleware.TokenAuthMiddleware(), handler.getStickers)
-	router.GET("/api/v1/stickers/:id", middleware.TokenAuthMiddleware(), handler.getStickerById)
-	router.PUT("/api/v1/stickers/:id", middleware.TokenAuthMiddleware(), handler.updateStickerById)
-	router.DELETE("/api/v1/stickers/:id", middleware.TokenAuthMiddleware(), handler.deleteStickerById)
+func LoadStickerRoutes(router *echo.Echo, handler *EchoHandler) {
+	router.POST("/api/v1/stickers", handler.createSticker, middleware.TokenAuthMiddleware)
+	router.GET("/api/v1/stickers", handler.getStickers, middleware.TokenAuthMiddleware)
+	router.GET("/api/v1/stickers/:id", handler.getStickerById, middleware.TokenAuthMiddleware)
+	router.PUT("/api/v1/stickers/:id", handler.updateStickerById, middleware.TokenAuthMiddleware)
+	router.DELETE("/api/v1/stickers/:id", handler.deleteStickerById, middleware.TokenAuthMiddleware)
 	// router.DELETE("/api/v1/stickers/:id/inactivate", middleware.TokenAuthMiddleware(), handler.deleteStickerById)
 }
 
-func (h *GinHandler) createSticker(c *gin.Context) {
+func (e *EchoHandler) createSticker(c echo.Context) error {
 	response := ResponseJSON{c: c}
 
 	var input entity.Sticker
 
-	if err := c.BindJSON(&input); err != nil {
-		response.ErrorHandler(http.StatusBadRequest, err)
-		return
+	if err := c.Bind(&input); err != nil {
+		return response.ErrorHandler(http.StatusBadRequest, err)
 	}
 
-	userId := getUserFromHeaders(c)
-
-	if err := h.StickerUseCase.CreateSticker(input, userId); err != nil {
-		response.ErrorHandler(http.StatusBadRequest, err)
-		return
-	}
-
-	response.SuccessHandler(http.StatusCreated, handleResponseMessage("Sticker Created"))
-}
-
-func (h *GinHandler) getStickers(c *gin.Context) {
-	response := ResponseJSON{c: c}
-
-	userId := getUserFromHeaders(c)
-
-	stickers, err := h.StickerUseCase.GetStickers(userId)
+	userId, err := getUserIdFromHeaders(c)
 	if err != nil {
-		response.ErrorHandler(http.StatusBadRequest, err)
-		return
+		return response.ErrorHandler(http.StatusUnauthorized, err)
 	}
 
-	response.SuccessHandler(http.StatusOK, stickers)
+	if err := e.StickerUseCase.CreateSticker(input, userId); err != nil {
+		return response.ErrorHandler(http.StatusBadRequest, err)
+	}
+
+	return response.SuccessHandler(http.StatusCreated, handleResponseMessage("Sticker Created"))
 }
 
-func (h *GinHandler) getStickerById(c *gin.Context) {
+func (e *EchoHandler) getStickers(c echo.Context) error {
 	response := ResponseJSON{c: c}
 
-	tokenString := c.Request.Header["Authorization"]
-	if tokenString == nil {
-		response.ErrorHandler(http.StatusBadRequest, errors.New("Authentication is missing"))
-		return
+	userId, err := getUserIdFromHeaders(c)
+	if err != nil {
+		return response.ErrorHandler(http.StatusUnauthorized, err)
 	}
 
-	userId := getUserFromHeaders(c)
+	stickers, err := e.StickerUseCase.GetStickers(userId)
+	if err != nil {
+		return response.ErrorHandler(http.StatusBadRequest, err)
+	}
+
+	return response.SuccessHandler(http.StatusOK, stickers)
+}
+
+func (e *EchoHandler) getStickerById(c echo.Context) error {
+	response := ResponseJSON{c: c}
+
+	userId, err := getUserIdFromHeaders(c)
+	if err != nil {
+		return response.ErrorHandler(http.StatusUnauthorized, err)
+	}
 
 	id, err := getIdFromParams(c)
 	if err != nil {
-		response.ErrorHandler(http.StatusBadRequest, err)
-		return
+		return response.ErrorHandler(http.StatusBadRequest, err)
 	}
 
-	stickers, err := h.StickerUseCase.GetStickerById(userId, id)
+	stickers, err := e.StickerUseCase.GetStickerById(userId, id)
 	if err != nil {
-		response.ErrorHandler(http.StatusBadRequest, err)
-		return
+		return response.ErrorHandler(http.StatusBadRequest, err)
 	}
 
-	response.SuccessHandler(http.StatusOK, stickers)
+	return response.SuccessHandler(http.StatusOK, stickers)
 }
 
-func (h *GinHandler) updateStickerById(c *gin.Context) {
+func (e *EchoHandler) updateStickerById(c echo.Context) error {
 	response := ResponseJSON{c: c}
 
 	var input entity.Sticker
 
-	if err := c.BindJSON(&input); err != nil {
-		response.ErrorHandler(http.StatusBadRequest, err)
-		return
+	if err := c.Bind(&input); err != nil {
+		return response.ErrorHandler(http.StatusBadRequest, err)
 	}
 
-	userId := getUserFromHeaders(c)
+	userId, err := getUserIdFromHeaders(c)
+	if err != nil {
+		return response.ErrorHandler(http.StatusUnauthorized, err)
+	}
 
 	id, err := getIdFromParams(c)
 	if err != nil {
-		response.ErrorHandler(http.StatusBadRequest, err)
-		return
+		return response.ErrorHandler(http.StatusBadRequest, err)
 	}
 
-	if err := h.StickerUseCase.UpdateStickerById(input, userId, id); err != nil {
-		response.ErrorHandler(http.StatusBadRequest, err)
-		return
+	if err := e.StickerUseCase.UpdateStickerById(input, userId, id); err != nil {
+		return response.ErrorHandler(http.StatusBadRequest, err)
 	}
 
-	response.SuccessHandler(http.StatusOK, handleResponseMessage("Sticker Updated"))
+	return response.SuccessHandler(http.StatusOK, handleResponseMessage("Sticker Updated"))
 }
 
-func (h *GinHandler) deleteStickerById(c *gin.Context) {
+func (e *EchoHandler) deleteStickerById(c echo.Context) error {
 	response := ResponseJSON{c: c}
 
-	userId := getUserFromHeaders(c)
+	userId, err := getUserIdFromHeaders(c)
+	if err != nil {
+		return response.ErrorHandler(http.StatusUnauthorized, err)
+	}
 
 	id, err := getIdFromParams(c)
 	if err != nil {
-		response.ErrorHandler(http.StatusBadRequest, err)
-		return
+		return response.ErrorHandler(http.StatusBadRequest, err)
 	}
 
-	if err := h.StickerUseCase.DeleteStickerById(userId, id); err != nil {
-		response.ErrorHandler(http.StatusBadRequest, err)
-		return
+	if err := e.StickerUseCase.DeleteStickerById(userId, id); err != nil {
+		return response.ErrorHandler(http.StatusBadRequest, err)
 	}
 
-	response.SuccessHandler(http.StatusOK, handleResponseMessage("Sticker Removed"))
+	return response.SuccessHandler(http.StatusOK, handleResponseMessage("Sticker Removed"))
 }

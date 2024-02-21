@@ -41,7 +41,7 @@ func main() {
 	stickerUseCaseService := stickerUseCase.LoadService(&validator, *stickerRepository, &logger)
 
 	logger.Info().Msg("Initializing Handlers")
-	router := handler.NewGinHandler(*userUseCaseService, *stickerUseCaseService)
+	router := handler.NewEchoHandler(*userUseCaseService, *stickerUseCaseService)
 
 	// Start the server
 	logger.Info().Msg(fmt.Sprintf("Starting Server on port %s", config.AppConfig.Port))

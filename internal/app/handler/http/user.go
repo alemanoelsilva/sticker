@@ -4,47 +4,43 @@ import (
 	"net/http"
 	"sticker/internal/app/entity"
 
-	"github.com/gin-gonic/gin"
+	"github.com/labstack/echo/v4"
 )
 
-func LoadUserRoutes(router *gin.Engine, handler *GinHandler) {
-	router.POST("/api/v1/sign-up", handler.signUp)
-	router.POST("/api/v1/sign-in", handler.signIn)
+func LoadUserRoutes(router *echo.Echo, handler *EchoHandler) {
+	router.POST("/api/v1/sign-up", handler.signUpHandler)
+	router.POST("/api/v1/sign-in", handler.signInHandler)
 }
 
-func (h *GinHandler) signUp(c *gin.Context) {
+func (e *EchoHandler) signUpHandler(c echo.Context) error {
 	response := ResponseJSON{c: c}
 
 	var input entity.User
 
-	if err := c.BindJSON(&input); err != nil {
-		response.ErrorHandler(http.StatusBadRequest, err)
-		return
+	if err := c.Bind(&input); err != nil {
+		return response.ErrorHandler(http.StatusBadRequest, err)
 	}
 
-	if err := h.UserUseCase.SignUp(input); err != nil {
-		response.ErrorHandler(http.StatusBadRequest, err)
-		return
+	if err := e.UserUseCase.SignUp(input); err != nil {
+		return response.ErrorHandler(http.StatusBadRequest, err)
 	}
 
-	response.SuccessHandler(http.StatusCreated, handleResponseMessage("Sign up done"))
+	return response.SuccessHandler(http.StatusCreated, handleResponseMessage("Sign up done"))
 }
 
-func (h *GinHandler) signIn(c *gin.Context) {
+func (e *EchoHandler) signInHandler(c echo.Context) error {
 	response := ResponseJSON{c: c}
 
 	var input entity.SignIn
 
-	if err := c.BindJSON(&input); err != nil {
-		response.ErrorHandler(http.StatusBadRequest, err)
-		return
+	if err := c.Bind(&input); err != nil {
+		return response.ErrorHandler(http.StatusBadRequest, err)
 	}
 
-	token, err := h.UserUseCase.SignIn(input)
+	token, err := e.UserUseCase.SignIn(input)
 	if err != nil {
-		response.ErrorHandler(http.StatusBadRequest, err)
-		return
+		return response.ErrorHandler(http.StatusBadRequest, err)
 	}
 
-	response.SuccessHandler(http.StatusOK, map[string]interface{}{"token": token})
+	return response.SuccessHandler(http.StatusOK, map[string]interface{}{"token": token})
 }
