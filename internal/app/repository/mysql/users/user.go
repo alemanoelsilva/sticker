@@ -2,34 +2,31 @@ package user
 
 import (
 	"errors"
-	"fmt"
 	"sticker/internal/app/entity"
 	model "sticker/internal/app/repository/mysql/model"
-	query "sticker/internal/app/repository/mysql/query"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
+	"gorm.io/gorm"
 )
 
 func handleSqlError() error {
-	return errors.New("Internal Server Error")
+	return errors.New("internal Server Error")
 }
 
 type SqlRepository struct {
-	DB     *sqlx.DB
+	DB     *gorm.DB
 	Logger *zerolog.Logger
 }
 
-func (s *SqlRepository) AddUser(user entity.User) (err error) {
+func (s *SqlRepository) AddUser(user entity.SignUp) error {
 	userModel := model.User{
-		ID:       user.ID,
 		Name:     user.Name,
 		Email:    user.Email,
 		Password: user.Password,
 	}
 
-	if _, err = s.DB.NamedExec(query.AddUserQuery, &userModel); err != nil {
-		s.Logger.Error().Err(err)
+	if result := s.DB.Save(&userModel); result.Error != nil {
+		s.Logger.Error().Err(result.Error)
 		return handleSqlError()
 	}
 
@@ -39,10 +36,8 @@ func (s *SqlRepository) AddUser(user entity.User) (err error) {
 func (s *SqlRepository) GetUserById(id int) (user entity.User, err error) {
 	var userModel model.User
 
-	query := fmt.Sprintf(query.GetUserByIdQuery, id)
-
-	if err = s.DB.Get(&userModel, query); err != nil {
-		s.Logger.Error().Err(err)
+	if result := s.DB.Where(&model.User{ID: id}).First(&userModel); result.Error != nil {
+		s.Logger.Error().Err(result.Error)
 		return user, handleSqlError()
 	}
 
@@ -59,15 +54,13 @@ func (s *SqlRepository) GetUserById(id int) (user entity.User, err error) {
 func (s *SqlRepository) GetUserByEmail(email string) (user entity.User, err error) {
 	var userModel model.User
 
-	query := fmt.Sprintf(query.GetUserByEmailQuery, email)
-
-	if err = s.DB.Get(&userModel, query); err != nil {
-		s.Logger.Error().Err(err)
+	if result := s.DB.Where(&model.User{Email: email}).First(&userModel); result.Error != nil {
+		s.Logger.Error().Err(result.Error)
 		return user, handleSqlError()
 	}
 
 	if userModel.ID == 0 {
-		return user, errors.New("User not found")
+		return user, errors.New("user not found")
 	}
 
 	user = entity.User{

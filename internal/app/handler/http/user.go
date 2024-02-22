@@ -15,7 +15,7 @@ func LoadUserRoutes(router *echo.Echo, handler *EchoHandler) {
 func (e *EchoHandler) signUpHandler(c echo.Context) error {
 	response := ResponseJSON{c: c}
 
-	var input entity.User
+	var input entity.SignUp
 
 	if err := c.Bind(&input); err != nil {
 		return response.ErrorHandler(http.StatusBadRequest, err)

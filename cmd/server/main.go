@@ -28,9 +28,8 @@ func main() {
 
 	ddb := database.DDB{Logger: &logger}
 	db := ddb.Connect(config.AppConfig.ConnectionString)
-
 	// TODO: check migration
-	// ddb.RunMigrations()
+	ddb.RunMigrations(db)
 
 	logger.Info().Msg("Initializing Repository (MySQL)")
 	// TODO: split repositories

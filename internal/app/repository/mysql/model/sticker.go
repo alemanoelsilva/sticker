@@ -1,13 +1,14 @@
 package model
 
 type Sticker struct {
-	ID             int    `db:"id"`
-	Name           string `db:"name"`
-	Description    string `db:"description"`
-	Category       string `db:"category"`
-	Frequency      string `db:"frequency"`
-	Status         string `db:"status"`
-	IsPublic       bool   `db:"is_public"`
-	IsAutoApproval bool   `db:"is_auto_approval"`
-	UserId         int    `db:"user_id"`
+	ID             int    `gorm:"primaryKey"`
+	Name           string `gorm:"name,type:varchar(255)"`
+	Description    string `gorm:"description,type:varchar(255)"`
+	Category       string `gorm:"category,size:30"`
+	Frequency      string `gorm:"frequency,size:30"`
+	Status         string `gorm:"status,size:30"`
+	IsPublic       bool   `gorm:"is_public"`
+	IsAutoApproval bool   `gorm:"is_auto_approval"`
+	User           User   `gorm:"foreignkey:UserId"`
+	UserId         int    `gorm:"user_id"`
 }

@@ -29,7 +29,7 @@ func LoadService(v *validator.Validate, r repo.SqlRepository, l *zerolog.Logger)
 	}
 }
 
-func (ser *Service) SignUp(input entity.User) (err error) {
+func (ser *Service) SignUp(input entity.SignUp) (err error) {
 	ser.Logger.Info().Msg("Creating a User")
 
 	if err = ser.Validator.Struct(validators.SignUp{
@@ -43,7 +43,7 @@ func (ser *Service) SignUp(input entity.User) (err error) {
 	hashedPassword, err := encrypt.Hash(input.Password)
 	if err != nil {
 		ser.Logger.Error().Msg(err.Error())
-		return errors.New("An Internal error happened, contact the system admin")
+		return errors.New("an Internal error happened, contact the system admin")
 	}
 
 	input.Password = hashedPassword
@@ -64,15 +64,15 @@ func (ser *Service) SignIn(input entity.SignIn) (token string, err error) {
 	userModel, err := ser.Repository.GetUserByEmail(input.Email)
 	if err != nil {
 		ser.Logger.Error().Msg(err.Error())
-		return "", errors.New("Credential does not match")
+		return "", errors.New("credential does not match")
 	}
 
 	if userModel.ID == 0 {
-		return "", errors.New("Credential not found")
+		return "", errors.New("credential not found")
 	}
 
 	if !encrypt.Check(input.Password, userModel.Password) {
-		return "", errors.New("Wrong password")
+		return "", errors.New("wrong password")
 	}
 
 	input.ID = userModel.ID
@@ -80,7 +80,7 @@ func (ser *Service) SignIn(input entity.SignIn) (token string, err error) {
 	token, err = jwt.NewAccessToken(input)
 	if err != nil {
 		ser.Logger.Error().Msg(err.Error())
-		return "", errors.New("An Internal error happened, contact the system admin")
+		return "", errors.New("an Internal error happened, contact the system admin")
 	}
 
 	return token, nil

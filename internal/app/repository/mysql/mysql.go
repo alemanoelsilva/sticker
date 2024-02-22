@@ -1,8 +1,8 @@
 package mysql
 
 import (
-	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
+	"gorm.io/gorm"
 
 	sticker "sticker/internal/app/repository/mysql/stickers"
 	user "sticker/internal/app/repository/mysql/users"
@@ -10,7 +10,7 @@ import (
 	_ "github.com/go-sql-driver/mysql"
 )
 
-func NewSqlRepository(db *sqlx.DB, logger *zerolog.Logger) (*user.SqlRepository, *sticker.SqlRepository) {
+func NewSqlRepository(db *gorm.DB, logger *zerolog.Logger) (*user.SqlRepository, *sticker.SqlRepository) {
 	userRepo := user.SqlRepository{DB: db, Logger: logger}
 	stickerRepo := sticker.SqlRepository{DB: db, Logger: logger}
 

@@ -2,17 +2,20 @@ package database
 
 import (
 	"os"
+	"sticker/internal/app/repository/mysql/model"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/rs/zerolog"
+	"gorm.io/driver/mysql"
+	"gorm.io/gorm"
 )
 
 type DDB struct {
 	Logger *zerolog.Logger
 }
 
-func (ddb *DDB) Connect(uri string) *sqlx.DB {
-	db, err := sqlx.Connect("mysql", uri)
+func (ddb *DDB) Connect(uri string) *gorm.DB {
+	db, err := gorm.Open(mysql.Open(uri), &gorm.Config{})
+
 	if err != nil {
 		ddb.Logger.Fatal().Err(err).Msg("MySQL connection error")
 		os.Exit(1)
@@ -21,6 +24,6 @@ func (ddb *DDB) Connect(uri string) *sqlx.DB {
 	return db
 }
 
-func (ddb *DDB) RunMigrations() {
-	ddb.Logger.Info().Msg("Not Implemented yet")
+func (ddb *DDB) RunMigrations(db *gorm.DB) {
+	db.AutoMigrate(&model.User{}, &model.Sticker{})
 }
