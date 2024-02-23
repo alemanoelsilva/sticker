@@ -148,3 +148,28 @@ func (s *SqlRepository) DeleteStickerById(userId int, stickerId int) error {
 
 	return nil
 }
+
+func (s *SqlRepository) InactivateStickerById(userId int, stickerId int) error {
+	var stickerModel model.Sticker
+
+	if result := s.DB.Where("id = ? AND user_id = ?", stickerId, userId).First(&stickerModel); result.Error != nil {
+		s.Logger.Error().Err(result.Error)
+		if result.Error.Error() == "record not found" {
+			return errors.New("sticker not found")
+		}
+		return handleSqlError()
+	}
+
+	if stickerModel.ID == 0 {
+		return errors.New("sticker not found")
+	}
+
+	stickerModel.Status = string(entity.INACTIVE)
+
+	if result := s.DB.Save(&stickerModel); result.Error != nil {
+		s.Logger.Error().Err(result.Error)
+		return handleSqlError()
+	}
+
+	return nil
+}

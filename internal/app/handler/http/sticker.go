@@ -35,15 +35,15 @@ func getIdFromParams(c echo.Context) (int, error) {
 }
 
 func LoadStickerRoutes(router *echo.Echo, handler *EchoHandler) {
-	router.POST("/api/v1/stickers", handler.createSticker, middleware.TokenAuthMiddleware)
-	router.GET("/api/v1/stickers", handler.getStickers, middleware.TokenAuthMiddleware)
-	router.GET("/api/v1/stickers/:id", handler.getStickerById, middleware.TokenAuthMiddleware)
-	router.PUT("/api/v1/stickers/:id", handler.updateStickerById, middleware.TokenAuthMiddleware)
-	router.DELETE("/api/v1/stickers/:id", handler.deleteStickerById, middleware.TokenAuthMiddleware)
-	// router.DELETE("/api/v1/stickers/:id/inactivate", middleware.TokenAuthMiddleware(), handler.deleteStickerById)
+	router.POST("/api/v1/stickers", handler.createStickerHandler, middleware.TokenAuthMiddleware)
+	router.GET("/api/v1/stickers", handler.getStickersHandler, middleware.TokenAuthMiddleware)
+	router.GET("/api/v1/stickers/:id", handler.getStickerByIdHandler, middleware.TokenAuthMiddleware)
+	router.PUT("/api/v1/stickers/:id", handler.updateStickerByIdHandler, middleware.TokenAuthMiddleware)
+	router.DELETE("/api/v1/stickers/:id", handler.deleteStickerByIdHandler, middleware.TokenAuthMiddleware)
+	router.PATCH("/api/v1/stickers/:id/inactivate", handler.inactivateStickerByIdHandler, middleware.TokenAuthMiddleware)
 }
 
-func (e *EchoHandler) createSticker(c echo.Context) error {
+func (e *EchoHandler) createStickerHandler(c echo.Context) error {
 	response := ResponseJSON{c: c}
 
 	var input entity.Sticker
@@ -64,7 +64,7 @@ func (e *EchoHandler) createSticker(c echo.Context) error {
 	return response.SuccessHandler(http.StatusCreated, handleResponseMessage("Sticker Created"))
 }
 
-func (e *EchoHandler) getStickers(c echo.Context) error {
+func (e *EchoHandler) getStickersHandler(c echo.Context) error {
 	response := ResponseJSON{c: c}
 
 	userId, err := getUserIdFromHeaders(c)
@@ -80,7 +80,7 @@ func (e *EchoHandler) getStickers(c echo.Context) error {
 	return response.SuccessHandler(http.StatusOK, stickers)
 }
 
-func (e *EchoHandler) getStickerById(c echo.Context) error {
+func (e *EchoHandler) getStickerByIdHandler(c echo.Context) error {
 	response := ResponseJSON{c: c}
 
 	userId, err := getUserIdFromHeaders(c)
@@ -101,7 +101,7 @@ func (e *EchoHandler) getStickerById(c echo.Context) error {
 	return response.SuccessHandler(http.StatusOK, stickers)
 }
 
-func (e *EchoHandler) updateStickerById(c echo.Context) error {
+func (e *EchoHandler) updateStickerByIdHandler(c echo.Context) error {
 	response := ResponseJSON{c: c}
 
 	var input entity.Sticker
@@ -127,7 +127,7 @@ func (e *EchoHandler) updateStickerById(c echo.Context) error {
 	return response.SuccessHandler(http.StatusOK, handleResponseMessage("Sticker Updated"))
 }
 
-func (e *EchoHandler) deleteStickerById(c echo.Context) error {
+func (e *EchoHandler) deleteStickerByIdHandler(c echo.Context) error {
 	response := ResponseJSON{c: c}
 
 	userId, err := getUserIdFromHeaders(c)
@@ -145,4 +145,24 @@ func (e *EchoHandler) deleteStickerById(c echo.Context) error {
 	}
 
 	return response.SuccessHandler(http.StatusOK, handleResponseMessage("Sticker Removed"))
+}
+
+func (e *EchoHandler) inactivateStickerByIdHandler(c echo.Context) error {
+	response := ResponseJSON{c: c}
+
+	userId, err := getUserIdFromHeaders(c)
+	if err != nil {
+		return response.ErrorHandler(http.StatusUnauthorized, err)
+	}
+
+	stickerId, err := getIdFromParams(c)
+	if err != nil {
+		return response.ErrorHandler(http.StatusBadRequest, err)
+	}
+
+	if err := e.StickerUseCase.InactivateStickerById(userId, stickerId); err != nil {
+		return response.ErrorHandler(http.StatusBadRequest, err)
+	}
+
+	return response.SuccessHandler(http.StatusOK, handleResponseMessage("Sticker inactivated"))
 }

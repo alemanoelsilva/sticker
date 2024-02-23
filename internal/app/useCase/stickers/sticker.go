@@ -76,3 +76,9 @@ func (ser *Service) DeleteStickerById(userId int, stickerId int) error {
 
 	return ser.Repository.DeleteStickerById(userId, stickerId)
 }
+
+func (ser *Service) InactivateStickerById(userId int, stickerId int) error {
+	ser.Logger.Info().Msg("Inactivating Sticker by id")
+
+	return ser.Repository.InactivateStickerById(userId, stickerId)
+}
