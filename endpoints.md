@@ -48,3 +48,8 @@ markmap:
 - Check JWT token
 - Verify if the sticker to be updated belongs to the user of the request
 - Delete it from stickers table
+
+### **[PATCH]** `/stickers/:id/inactivate`
+- Check JWT token
+- Verify if the sticker to be updated belongs to the user of the request
+- Change the sticker status to `INACTIVE`
